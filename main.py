@@ -1,25 +1,36 @@
 import os
 from dotenv import load_dotenv
 import sys
+from google import genai
+from google.genai import types
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 
-from google import genai
 
 client = genai.Client(api_key=api_key)
+verbose = ''
 try:
-	prompt = sys.argv[1]
+	user_prompt = sys.argv[1]
 except IndexError:
 	print('Error: No command line argument provided')
 	sys.exit(1)
-		
-print(prompt)
 
-response = client.models.generate_content(model='gemini-2.0-flash-001', contents=prompt)
+try:
+	verbose = sys.argv[2]
+except IndexError:
+	pass
+
+messages = [
+    types.Content(role="user", parts=[types.Part(text=user_prompt)]),
+]
+
+response = client.models.generate_content(model='gemini-2.0-flash-001', contents=messages,)
 print(response.text)
-print('Prompt tokens:', response.usage_metadata.prompt_token_count)
-print('Response tokens:', response.usage_metadata.candidates_token_count)
+if verbose == '--verbose':
+	print('User prompt:', user_prompt)
+	print('Prompt tokens:', response.usage_metadata.prompt_token_count)
+	print('Response tokens:', response.usage_metadata.candidates_token_count)
 
 def main():
     print("Hello from llms!")
